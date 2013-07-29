@@ -1,0 +1,25 @@
+
+#!/bin/bash
+
+E_OK="0"
+E_CRITICAL="2"
+
+retry_interval=$1
+retry_time=$2
+community=$3
+ip=$4
+trap_id=$5
+snmp_info=$6
+message=$7
+
+COMMAND=`snmpinform -Le -d -v 2c  -r $retry_interval -t $retry_time -c $community $ip '' $trap_id $snmp_info s $message`
+
+if [ "$?" != "0" ]; then
+   echo "Timeout occured ! SnmpTrapd service is not responding"
+   exit ${E_CRITICAL}
+
+ else
+   echo "Trap Sent Successfully"
+    exit ${E_OK}
+ fi
+
