@@ -1,4 +1,4 @@
 Linux_Training
 ==============
 
-Contains file for Linux
+This contains small implementations of Shell Scripting
