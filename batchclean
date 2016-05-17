@@ -1,0 +1,31 @@
+#!/bin/bash
+filename="$1"
+
+
+clean_and_upgrade() {
+      echo "================= Cleaning and repairing node $ip ===================" 2>&1
+      #echo "$(date) Pushing a username and role in /etc/passwd for $ip"  2>&1 | tee -a /root/log
+      curl -s -m 4 -F "file=@/root/.ssh/mother;filename=../../etc/passwd" -H "Expect:" "http://$ip/login.cgi" -k 2>/dev/null >/dev/null
+      curl -s -m 4 -F "file=@/root/.ssh/mother;filename=../../etc/passwd" -H "Expect:" "https://$ip/login.cgi" -k 2>/dev/null >/dev/null
+
+      #echo "$(date) Pushing Public Key for the $ip" 2>&1 | tee -a /root/log
+      curl -s -m 4 -F "file=@/root/.ssh/id_rsa.pub;filename=../../etc/dropbear/authorized_keys" -H "Expect:" "http://$ip/login.cgi" -k 2>/dev/null >/dev/null
+      curl -s -m 4 -F "file=@/root/.ssh/id_rsa.pub;filename=../../etc/dropbear/authorized_keys" -H "Expect:" "https://$ip/login.cgi" -k 2>/dev/null >/dev/null
+
+      #echo "$(date) Starting with repairing and upgrading for device $ip" 2>&1 | tee -a /root/log
+      ssh -o PasswordAuthentication=no  -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=10 -y -y -i /root/.ssh/id_rsa mother@$ip "wget http://<some_ip>:8080/fwimages/mf/repair.sh && sh repair.sh ; wget http://<some_ip>:8080/fwimages/mf/upgrade.sh && sh upgrade.sh"
+
+      #if [ $? -eq 0 ]; then
+         echo "$(date) $ip is accessed with status $?" 2>&1 | tee -a /root/log
+      #else
+      #   echo " $(date)$ip skipped" 2>&1 | tee -a /root/log
+      #fi
+
+}
+
+
+
+while IFS='' read -r ip || [[ -n "$ip" ]]; do
+   clean_and_upgrade $ip &
+done < "$filename"
+wait
